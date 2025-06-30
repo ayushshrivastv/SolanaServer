@@ -43,3 +43,4 @@ docker run -p 3000:3000 solana-http-server
 Deploy to Railway, Render, or any container platform that supports Dockerfile.
 
 Environment variable: `PORT` (defaults to 3000) 
+# Force deployment - Mon Jun 30 22:59:57 IST 2025
