@@ -122,7 +122,7 @@ async fn main() {
 
 // Handle both 404s and method not allowed with same response format
 async fn handle_fallback() -> (StatusCode, Json<ApiResponse<String>>) {
-    (StatusCode::OK, Json(ApiResponse::error("Method not allowed".to_string())))
+    (StatusCode::OK, Json(ApiResponse::error("Endpoint not found".to_string())))
 }
 
 // Handle wrong methods on valid endpoints - return HTTP 200 with JSON error

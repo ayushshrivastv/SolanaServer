@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateTokenRequest {
+    #[serde(alias = "mintAuthority")]
     pub payer: String,
     pub mint: String,
     pub decimals: u8,
