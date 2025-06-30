@@ -1,7 +1,8 @@
 use axum::{
-    routing::post,
+    routing::{post, get, put, patch, delete, head, options},
     Router,
     response::Json,
+    http::StatusCode,
 };
 use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
@@ -22,22 +23,78 @@ async fn main() {
     // Build our application with routes
     let app = Router::new()
         // Keypair operations
-        .route("/keypair", post(keypair::generate_keypair))
+        .route("/keypair", 
+            post(keypair::generate_keypair)
+            .get(handle_method_error)
+            .put(handle_method_error)
+            .patch(handle_method_error)
+            .delete(handle_method_error)
+            .head(handle_method_error)
+            .options(handle_method_error)
+        )
         
         // Message operations
-        .route("/message/sign", post(message::sign_message))
-        .route("/message/verify", post(message::verify_message))
+        .route("/message/sign", 
+            post(message::sign_message)
+            .get(handle_method_error)
+            .put(handle_method_error)
+            .patch(handle_method_error)
+            .delete(handle_method_error)
+            .head(handle_method_error)
+            .options(handle_method_error)
+        )
+        .route("/message/verify", 
+            post(message::verify_message)
+            .get(handle_method_error)
+            .put(handle_method_error)
+            .patch(handle_method_error)
+            .delete(handle_method_error)
+            .head(handle_method_error)
+            .options(handle_method_error)
+        )
         
         // Token operations
-        .route("/token/create", post(token::create_token))
-        .route("/token/mint", post(token::mint_token))
+        .route("/token/create", 
+            post(token::create_token)
+            .get(handle_method_error)
+            .put(handle_method_error)
+            .patch(handle_method_error)
+            .delete(handle_method_error)
+            .head(handle_method_error)
+            .options(handle_method_error)
+        )
+        .route("/token/mint", 
+            post(token::mint_token)
+            .get(handle_method_error)
+            .put(handle_method_error)
+            .patch(handle_method_error)
+            .delete(handle_method_error)
+            .head(handle_method_error)
+            .options(handle_method_error)
+        )
         
         // Transfer operations
-        .route("/send/sol", post(transfer::send_sol))
-        .route("/send/token", post(transfer::send_token))
+        .route("/send/sol", 
+            post(transfer::send_sol)
+            .get(handle_method_error)
+            .put(handle_method_error)
+            .patch(handle_method_error)
+            .delete(handle_method_error)
+            .head(handle_method_error)
+            .options(handle_method_error)
+        )
+        .route("/send/token", 
+            post(transfer::send_token)
+            .get(handle_method_error)
+            .put(handle_method_error)
+            .patch(handle_method_error)
+            .delete(handle_method_error)
+            .head(handle_method_error)
+            .options(handle_method_error)
+        )
         
-        // Fallback for 404s - must be last
-        .fallback(handle_404)
+        // Fallback for everything else
+        .fallback(handle_fallback)
         
         // Add middleware
         .layer(
@@ -63,6 +120,12 @@ async fn main() {
         .expect("Failed to start server");
 }
 
-async fn handle_404() -> Json<ApiResponse<String>> {
-    Json(ApiResponse::error("Endpoint not found".to_string()))
+// Handle both 404s and method not allowed with same response format
+async fn handle_fallback() -> (StatusCode, Json<ApiResponse<String>>) {
+    (StatusCode::OK, Json(ApiResponse::error("Method not allowed".to_string())))
+}
+
+// Handle wrong methods on valid endpoints - return HTTP 200 with JSON error
+async fn handle_method_error() -> (StatusCode, Json<ApiResponse<String>>) {
+    (StatusCode::OK, Json(ApiResponse::error("Method not allowed".to_string())))
 }
