@@ -80,4 +80,11 @@ pub struct TokenTransferResponse {
     pub program_id: String,
     pub accounts: Vec<TokenAccountMeta>,
     pub instruction_data: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TokenCreateResponse {
+    pub program_id: String,
+    pub accounts: AccountMeta, // Single account object as per spec
+    pub instruction_data: String,
 } 

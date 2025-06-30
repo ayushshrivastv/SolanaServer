@@ -3,12 +3,12 @@ use solana_sdk::instruction::Instruction;
 use spl_token::instruction::{initialize_mint, mint_to};
 use base64::Engine;
 use crate::models::requests::{CreateTokenRequest, MintTokenRequest};
-use crate::models::responses::{ApiResponse, InstructionResponse, AccountMeta};
+use crate::models::responses::{ApiResponse, InstructionResponse, AccountMeta, TokenCreateResponse};
 use crate::utils::validation::{validate_pubkey, validate_decimals, validate_amount};
 
 pub async fn create_token(
     body: Bytes,
-) -> Json<ApiResponse<InstructionResponse>> {
+) -> Json<ApiResponse<TokenCreateResponse>> {
     // Parse JSON manually
     let request: CreateTokenRequest = match serde_json::from_slice(&body) {
         Ok(req) => req,
@@ -42,7 +42,7 @@ pub async fn create_token(
         Err(e) => return Json(ApiResponse::error(format!("Failed to create instruction: {}", e))),
     };
 
-    let response = instruction_to_response(instruction);
+    let response = token_create_instruction_to_response(instruction);
     Json(ApiResponse::success(response))
 }
 
@@ -106,6 +106,25 @@ fn instruction_to_response(instruction: Instruction) -> InstructionResponse {
     InstructionResponse {
         program_id: instruction.program_id.to_string(),
         accounts,
+        instruction_data: base64::engine::general_purpose::STANDARD.encode(&instruction.data),
+    }
+}
+
+fn token_create_instruction_to_response(instruction: Instruction) -> TokenCreateResponse {
+    // For token create, return the first account (mint account) as a single object
+    let mint_account = instruction.accounts.first().map(|account| AccountMeta {
+        pubkey: account.pubkey.to_string(),
+        is_signer: account.is_signer,
+        is_writable: account.is_writable,
+    }).unwrap_or_else(|| AccountMeta {
+        pubkey: "11111111111111111111111111111111".to_string(),
+        is_signer: false,
+        is_writable: true,
+    });
+
+    TokenCreateResponse {
+        program_id: instruction.program_id.to_string(),
+        accounts: mint_account,
         instruction_data: base64::engine::general_purpose::STANDARD.encode(&instruction.data),
     }
 } 

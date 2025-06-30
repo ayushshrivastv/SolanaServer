@@ -15,8 +15,8 @@ pub async fn sign_message(
         Err(_) => return Json(ApiResponse::error("Invalid JSON or missing required fields".to_string())),
     };
 
-    // Validate input
-    if request.message.is_empty() || request.secret.is_empty() {
+    // Validate input - only check if secret is present, allow empty messages
+    if request.secret.is_empty() {
         return Json(ApiResponse::error("Missing required fields".to_string()));
     }
 
@@ -54,8 +54,8 @@ pub async fn verify_message(
         Err(_) => return Json(ApiResponse::error("Invalid JSON or missing required fields".to_string())),
     };
 
-    // Validate input
-    if request.message.is_empty() || request.signature.is_empty() || request.pubkey.is_empty() {
+    // Validate input - allow empty messages, but require signature and pubkey
+    if request.signature.is_empty() || request.pubkey.is_empty() {
         return Json(ApiResponse::error("Missing required fields".to_string()));
     }
 
