@@ -1,0 +1,11 @@
+run = "cargo run"
+
+[nix]
+channel = "stable-22_11"
+
+[env]
+RUST_LOG = "debug"
+
+[[ports]]
+localPort = 3000
+externalPort = 80
