@@ -1,4 +1,4 @@
-use axum::{extract::Json as ExtractJson, response::Json, http::StatusCode};
+use axum::{response::Json, http::StatusCode, extract::rejection::JsonRejection, body::Bytes};
 use solana_sdk::instruction::Instruction;
 use spl_token::instruction::{initialize_mint, mint_to};
 use base64::Engine;
@@ -7,21 +7,27 @@ use crate::models::responses::{ApiResponse, InstructionResponse, AccountMeta};
 use crate::utils::validation::{validate_pubkey, validate_decimals, validate_amount};
 
 pub async fn create_token(
-    ExtractJson(request): ExtractJson<CreateTokenRequest>,
-) -> Result<Json<ApiResponse<InstructionResponse>>, StatusCode> {
+    body: Bytes,
+) -> Json<ApiResponse<InstructionResponse>> {
+    // Parse JSON manually
+    let request: CreateTokenRequest = match serde_json::from_slice(&body) {
+        Ok(req) => req,
+        Err(_) => return Json(ApiResponse::error("Invalid JSON or missing required fields".to_string())),
+    };
+
     // Validate inputs
     let mint_authority = match validate_pubkey(&request.mint_authority) {
         Ok(pubkey) => pubkey,
-        Err(e) => return Ok(Json(ApiResponse::error(e))),
+        Err(e) => return Json(ApiResponse::error(e)),
     };
 
     let mint = match validate_pubkey(&request.mint) {
         Ok(pubkey) => pubkey,
-        Err(e) => return Ok(Json(ApiResponse::error(e))),
+        Err(e) => return Json(ApiResponse::error(e)),
     };
 
     if let Err(e) = validate_decimals(request.decimals) {
-        return Ok(Json(ApiResponse::error(e)));
+        return Json(ApiResponse::error(e));
     }
 
     // Create initialize mint instruction
@@ -33,34 +39,40 @@ pub async fn create_token(
         request.decimals,
     ) {
         Ok(instr) => instr,
-        Err(e) => return Ok(Json(ApiResponse::error(format!("Failed to create instruction: {}", e)))),
+        Err(e) => return Json(ApiResponse::error(format!("Failed to create instruction: {}", e))),
     };
 
     let response = instruction_to_response(instruction);
-    Ok(Json(ApiResponse::success(response)))
+    Json(ApiResponse::success(response))
 }
 
 pub async fn mint_token(
-    ExtractJson(request): ExtractJson<MintTokenRequest>,
-) -> Result<Json<ApiResponse<InstructionResponse>>, StatusCode> {
+    body: Bytes,
+) -> Json<ApiResponse<InstructionResponse>> {
+    // Parse JSON manually
+    let request: MintTokenRequest = match serde_json::from_slice(&body) {
+        Ok(req) => req,
+        Err(_) => return Json(ApiResponse::error("Invalid JSON or missing required fields".to_string())),
+    };
+
     // Validate inputs
     let mint = match validate_pubkey(&request.mint) {
         Ok(pubkey) => pubkey,
-        Err(e) => return Ok(Json(ApiResponse::error(e))),
+        Err(e) => return Json(ApiResponse::error(e)),
     };
 
     let destination = match validate_pubkey(&request.destination) {
         Ok(pubkey) => pubkey,
-        Err(e) => return Ok(Json(ApiResponse::error(e))),
+        Err(e) => return Json(ApiResponse::error(e)),
     };
 
     let authority = match validate_pubkey(&request.authority) {
         Ok(pubkey) => pubkey,
-        Err(e) => return Ok(Json(ApiResponse::error(e))),
+        Err(e) => return Json(ApiResponse::error(e)),
     };
 
     if let Err(e) = validate_amount(request.amount) {
-        return Ok(Json(ApiResponse::error(e)));
+        return Json(ApiResponse::error(e));
     }
 
     // Create mint to instruction
@@ -73,11 +85,11 @@ pub async fn mint_token(
         request.amount,
     ) {
         Ok(instr) => instr,
-        Err(e) => return Ok(Json(ApiResponse::error(format!("Failed to create instruction: {}", e)))),
+        Err(e) => return Json(ApiResponse::error(format!("Failed to create instruction: {}", e))),
     };
 
     let response = instruction_to_response(instruction);
-    Ok(Json(ApiResponse::success(response)))
+    Json(ApiResponse::success(response))
 }
 
 fn instruction_to_response(instruction: Instruction) -> InstructionResponse {

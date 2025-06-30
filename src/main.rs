@@ -3,6 +3,9 @@ use axum::{
     Router,
     http::StatusCode,
     response::Json,
+    extract::rejection::JsonRejection,
+    response::Response,
+    handler::Handler,
 };
 use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
@@ -41,6 +44,9 @@ async fn main() {
         .route("/", post(health_check))
         .route("/health", post(health_check))
         
+        // Fallback for 404s - must be last
+        .fallback(handle_404)
+        
         // Add middleware
         .layer(
             ServiceBuilder::new()
@@ -65,6 +71,10 @@ async fn main() {
         .expect("Failed to start server");
 }
 
-async fn health_check() -> Result<Json<ApiResponse<String>>, StatusCode> {
-    Ok(Json(ApiResponse::success("Solana HTTP Server is running!".to_string())))
+async fn health_check() -> Json<ApiResponse<String>> {
+    Json(ApiResponse::success("Solana HTTP Server is running!".to_string()))
+}
+
+async fn handle_404() -> Json<ApiResponse<String>> {
+    Json(ApiResponse::error("Endpoint not found".to_string()))
 }

@@ -1,4 +1,4 @@
-use axum::{extract::Json as ExtractJson, response::Json, http::StatusCode};
+use axum::{response::Json, http::StatusCode, extract::rejection::JsonRejection, body::Bytes};
 use solana_sdk::{instruction::Instruction, system_instruction};
 use spl_token::instruction::transfer;
 use base64::Engine;
@@ -7,51 +7,63 @@ use crate::models::responses::{ApiResponse, InstructionResponse, AccountMeta};
 use crate::utils::validation::{validate_pubkey, validate_amount};
 
 pub async fn send_sol(
-    ExtractJson(request): ExtractJson<SendSolRequest>,
-) -> Result<Json<ApiResponse<InstructionResponse>>, StatusCode> {
+    body: Bytes,
+) -> Json<ApiResponse<InstructionResponse>> {
+    // Parse JSON manually
+    let request: SendSolRequest = match serde_json::from_slice(&body) {
+        Ok(req) => req,
+        Err(_) => return Json(ApiResponse::error("Invalid JSON or missing required fields".to_string())),
+    };
+
     // Validate inputs
     let from = match validate_pubkey(&request.from) {
         Ok(pubkey) => pubkey,
-        Err(e) => return Ok(Json(ApiResponse::error(e))),
+        Err(e) => return Json(ApiResponse::error(e)),
     };
 
     let to = match validate_pubkey(&request.to) {
         Ok(pubkey) => pubkey,
-        Err(e) => return Ok(Json(ApiResponse::error(e))),
+        Err(e) => return Json(ApiResponse::error(e)),
     };
 
     if let Err(e) = validate_amount(request.lamports) {
-        return Ok(Json(ApiResponse::error(e)));
+        return Json(ApiResponse::error(e));
     }
 
     // Create SOL transfer instruction
     let instruction = system_instruction::transfer(&from, &to, request.lamports);
 
     let response = instruction_to_response(instruction);
-    Ok(Json(ApiResponse::success(response)))
+    Json(ApiResponse::success(response))
 }
 
 pub async fn send_token(
-    ExtractJson(request): ExtractJson<SendTokenRequest>,
-) -> Result<Json<ApiResponse<InstructionResponse>>, StatusCode> {
+    body: Bytes,
+) -> Json<ApiResponse<InstructionResponse>> {
+    // Parse JSON manually
+    let request: SendTokenRequest = match serde_json::from_slice(&body) {
+        Ok(req) => req,
+        Err(_) => return Json(ApiResponse::error("Invalid JSON or missing required fields".to_string())),
+    };
+
     // Validate inputs
     let destination = match validate_pubkey(&request.destination) {
         Ok(pubkey) => pubkey,
-        Err(e) => return Ok(Json(ApiResponse::error(e))),
+        Err(e) => return Json(ApiResponse::error(e)),
     };
 
     let _mint = match validate_pubkey(&request.mint) {
         Ok(pubkey) => pubkey,
-        Err(e) => return Ok(Json(ApiResponse::error(e))),
+        Err(e) => return Json(ApiResponse::error(e)),
     };
 
     let owner = match validate_pubkey(&request.owner) {
         Ok(pubkey) => pubkey,
-        Err(e) => return Ok(Json(ApiResponse::error(e))),
+        Err(e) => return Json(ApiResponse::error(e)),
     };
 
     if let Err(e) = validate_amount(request.amount) {
-        return Ok(Json(ApiResponse::error(e)));
+        return Json(ApiResponse::error(e));
     }
 
     // For SPL token transfer, we need to derive the source token account
@@ -69,11 +81,11 @@ pub async fn send_token(
         request.amount,
     ) {
         Ok(instr) => instr,
-        Err(e) => return Ok(Json(ApiResponse::error(format!("Failed to create instruction: {}", e)))),
+        Err(e) => return Json(ApiResponse::error(format!("Failed to create instruction: {}", e))),
     };
 
     let response = instruction_to_response(instruction);
-    Ok(Json(ApiResponse::success(response)))
+    Json(ApiResponse::success(response))
 }
 
 fn instruction_to_response(instruction: Instruction) -> InstructionResponse {
