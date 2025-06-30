@@ -1,0 +1,17 @@
+{
+  "builds": [
+    {
+      "src": "Cargo.toml",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "target/release"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/solana-http-server"
+    }
+  ]
+} 
