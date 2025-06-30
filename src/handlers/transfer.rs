@@ -1,14 +1,14 @@
-use axum::{response::Json, http::StatusCode, extract::rejection::JsonRejection, body::Bytes};
+use axum::{response::Json, body::Bytes};
 use solana_sdk::{instruction::Instruction, system_instruction};
 use spl_token::instruction::transfer;
 use base64::Engine;
 use crate::models::requests::{SendSolRequest, SendTokenRequest};
-use crate::models::responses::{ApiResponse, InstructionResponse, AccountMeta};
+use crate::models::responses::{ApiResponse, InstructionResponse, AccountMeta, SolTransferResponse, TokenTransferResponse, TokenAccountMeta};
 use crate::utils::validation::{validate_pubkey, validate_amount};
 
 pub async fn send_sol(
     body: Bytes,
-) -> Json<ApiResponse<InstructionResponse>> {
+) -> Json<ApiResponse<SolTransferResponse>> {
     // Parse JSON manually
     let request: SendSolRequest = match serde_json::from_slice(&body) {
         Ok(req) => req,
@@ -33,13 +33,13 @@ pub async fn send_sol(
     // Create SOL transfer instruction
     let instruction = system_instruction::transfer(&from, &to, request.lamports);
 
-    let response = instruction_to_response(instruction);
+    let response = sol_instruction_to_response(instruction);
     Json(ApiResponse::success(response))
 }
 
 pub async fn send_token(
     body: Bytes,
-) -> Json<ApiResponse<InstructionResponse>> {
+) -> Json<ApiResponse<TokenTransferResponse>> {
     // Parse JSON manually
     let request: SendTokenRequest = match serde_json::from_slice(&body) {
         Ok(req) => req,
@@ -84,8 +84,39 @@ pub async fn send_token(
         Err(e) => return Json(ApiResponse::error(format!("Failed to create instruction: {}", e))),
     };
 
-    let response = instruction_to_response(instruction);
+    let response = token_instruction_to_response(instruction);
     Json(ApiResponse::success(response))
+}
+
+fn sol_instruction_to_response(instruction: Instruction) -> SolTransferResponse {
+    let accounts = instruction
+        .accounts
+        .iter()
+        .map(|account| account.pubkey.to_string())
+        .collect();
+
+    SolTransferResponse {
+        program_id: instruction.program_id.to_string(),
+        accounts,
+        instruction_data: base64::engine::general_purpose::STANDARD.encode(&instruction.data),
+    }
+}
+
+fn token_instruction_to_response(instruction: Instruction) -> TokenTransferResponse {
+    let accounts = instruction
+        .accounts
+        .iter()
+        .map(|account| TokenAccountMeta {
+            pubkey: account.pubkey.to_string(),
+            is_signer: account.is_signer,
+        })
+        .collect();
+
+    TokenTransferResponse {
+        program_id: instruction.program_id.to_string(),
+        accounts,
+        instruction_data: base64::engine::general_purpose::STANDARD.encode(&instruction.data),
+    }
 }
 
 fn instruction_to_response(instruction: Instruction) -> InstructionResponse {

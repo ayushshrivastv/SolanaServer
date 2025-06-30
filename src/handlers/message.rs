@@ -1,4 +1,4 @@
-use axum::{response::Json, http::StatusCode, extract::rejection::JsonRejection, body::Bytes};
+use axum::{response::Json, body::Bytes};
 use solana_sdk::signer::{keypair::Keypair, Signer};
 use solana_sdk::signature::Signature;
 use solana_sdk::pubkey::Pubkey;

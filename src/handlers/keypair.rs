@@ -1,4 +1,4 @@
-use axum::{response::Json, http::StatusCode};
+use axum::response::Json;
 use solana_sdk::signer::{keypair::Keypair, Signer};
 use crate::models::responses::{ApiResponse, KeypairResponse};
 

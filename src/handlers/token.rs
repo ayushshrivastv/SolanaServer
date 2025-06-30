@@ -1,4 +1,4 @@
-use axum::{response::Json, http::StatusCode, extract::rejection::JsonRejection, body::Bytes};
+use axum::{response::Json, body::Bytes};
 use solana_sdk::instruction::Instruction;
 use spl_token::instruction::{initialize_mint, mint_to};
 use base64::Engine;

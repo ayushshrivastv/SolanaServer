@@ -1,11 +1,7 @@
 use axum::{
-    routing::post,
+    routing::{post, get},
     Router,
-    http::StatusCode,
     response::Json,
-    extract::rejection::JsonRejection,
-    response::Response,
-    handler::Handler,
 };
 use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
@@ -26,7 +22,7 @@ async fn main() {
     // Build our application with routes
     let app = Router::new()
         // Keypair operations
-        .route("/keypair", post(keypair::generate_keypair))
+        .route("/keypair", get(keypair::generate_keypair).post(keypair::generate_keypair))
         
         // Message operations
         .route("/message/sign", post(message::sign_message))
@@ -41,8 +37,8 @@ async fn main() {
         .route("/send/token", post(transfer::send_token))
         
         // Health check endpoint
-        .route("/", post(health_check))
-        .route("/health", post(health_check))
+        .route("/", get(health_check))
+        .route("/health", get(health_check))
         
         // Fallback for 404s - must be last
         .fallback(handle_404)

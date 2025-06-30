@@ -59,4 +59,25 @@ pub struct VerificationResponse {
     pub valid: bool,
     pub message: String,
     pub pubkey: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SolTransferResponse {
+    pub program_id: String,
+    pub accounts: Vec<String>,
+    pub instruction_data: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TokenAccountMeta {
+    pub pubkey: String,
+    #[serde(rename = "isSigner")]
+    pub is_signer: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TokenTransferResponse {
+    pub program_id: String,
+    pub accounts: Vec<TokenAccountMeta>,
+    pub instruction_data: String,
 } 
