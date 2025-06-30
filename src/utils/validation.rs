@@ -12,9 +12,7 @@ pub fn validate_base58_secret(secret: &str) -> Result<Vec<u8>, String> {
 }
 
 pub fn validate_amount(amount: u64) -> Result<(), String> {
-    if amount == 0 {
-        return Err("Amount must be greater than 0".to_string());
-    }
+    // Allow zero amounts as they are valid for various Solana use cases
     Ok(())
 }
 

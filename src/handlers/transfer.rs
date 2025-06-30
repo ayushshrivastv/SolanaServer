@@ -12,7 +12,7 @@ pub async fn send_sol(
     // Parse JSON manually
     let request: SendSolRequest = match serde_json::from_slice(&body) {
         Ok(req) => req,
-        Err(_) => return Json(ApiResponse::error("Invalid JSON or missing required fields".to_string())),
+        Err(_) => return Json(ApiResponse::error("Missing required fields".to_string())),
     };
 
     // Validate inputs
@@ -43,7 +43,7 @@ pub async fn send_token(
     // Parse JSON manually
     let request: SendTokenRequest = match serde_json::from_slice(&body) {
         Ok(req) => req,
-        Err(_) => return Json(ApiResponse::error("Invalid JSON or missing required fields".to_string())),
+        Err(_) => return Json(ApiResponse::error("Missing required fields".to_string())),
     };
 
     // Validate inputs

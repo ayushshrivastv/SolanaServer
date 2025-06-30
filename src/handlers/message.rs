@@ -12,7 +12,7 @@ pub async fn sign_message(
     // Parse JSON manually
     let request: SignMessageRequest = match serde_json::from_slice(&body) {
         Ok(req) => req,
-        Err(_) => return Json(ApiResponse::error("Invalid JSON or missing required fields".to_string())),
+        Err(_) => return Json(ApiResponse::error("Missing required fields".to_string())),
     };
 
     // Validate input - only check if secret is present, allow empty messages
@@ -51,7 +51,7 @@ pub async fn verify_message(
     // Parse JSON manually
     let request: VerifyMessageRequest = match serde_json::from_slice(&body) {
         Ok(req) => req,
-        Err(_) => return Json(ApiResponse::error("Invalid JSON or missing required fields".to_string())),
+        Err(_) => return Json(ApiResponse::error("Missing required fields".to_string())),
     };
 
     // Validate input - allow empty messages, but require signature and pubkey

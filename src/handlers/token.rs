@@ -12,11 +12,11 @@ pub async fn create_token(
     // Parse JSON manually
     let request: CreateTokenRequest = match serde_json::from_slice(&body) {
         Ok(req) => req,
-        Err(_) => return Json(ApiResponse::error("Invalid JSON or missing required fields".to_string())),
+        Err(_) => return Json(ApiResponse::error("Missing required fields".to_string())),
     };
 
     // Validate inputs
-    let mint_authority = match validate_pubkey(&request.mint_authority) {
+    let mint_authority = match validate_pubkey(&request.payer) {
         Ok(pubkey) => pubkey,
         Err(e) => return Json(ApiResponse::error(e)),
     };
@@ -52,7 +52,7 @@ pub async fn mint_token(
     // Parse JSON manually
     let request: MintTokenRequest = match serde_json::from_slice(&body) {
         Ok(req) => req,
-        Err(_) => return Json(ApiResponse::error("Invalid JSON or missing required fields".to_string())),
+        Err(_) => return Json(ApiResponse::error("Missing required fields".to_string())),
     };
 
     // Validate inputs
